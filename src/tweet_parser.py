@@ -20,9 +20,9 @@ import datetime
 """
 Initialize the filepaths that will be used
 """
-input_filename = '../tweets_input/tweets.txt'
-cleaned_tweets = '../tweets_output/ft1.txt'
-average_degree = '../tweets_output/tf2.txt'
+input_filename = './tweets_input/tweets.txt'
+cleaned_tweets = './tweets_output/ft1.txt'
+average_degree = './tweets_output/tf2.txt'
 
 """
 Initialize the lists that will be used
