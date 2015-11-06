@@ -54,7 +54,7 @@ any non-ascii characters by checking each chars dec value.
 """
 def is_ascii(s):
     for c in s:
-        if ord(c) > 127: 
+        if ord(c) > 127:                #check if char is outside ascii range
             return False
     return True
 
@@ -67,7 +67,7 @@ adding any new edges.
 def insert_node(tags,age):
     for tag in tags:                    #interate over all of the hashtags
         if tag in graph:                #check if the node already exists
-            #graph[tag + '_age'] = age   #update node age            
+            
             for i in range(len(tags)):         #if it does, add new edges
                 if tag == tags[i]:      #a node can't be connected to itself
                     continue
@@ -81,7 +81,7 @@ def insert_node(tags,age):
         
         else:                           #if the tag isn't already in the graph
             graph[tag] = set()          #initialize the key's value to a set
-           #graph[tag + '_age'] = age   #give the node an age
+
             for i in range(len(tags)):  #add edges, skipping self
                 if tag == tags[i]:
                     continue
@@ -91,22 +91,26 @@ def insert_node(tags,age):
 
 """
 A function that removes nodes and/or edges from the graph
-by checking the age the node.
+by checking the age the edges. It does this by interating
+over the entire graph, comparing the age of the edge to now,
+and if it is older than one minute removing it. Then it checks
+to see if the node is isolated, ie has no edges, and if it is
+removes the node.
 """
 def remove_node(now):
-    old = now - one_minute
+    old = now - one_minute              #the time to compare edges to
     old_nodes = []
-    for node in graph:
+    for node in graph:                  #interate over the graph
         old_edges = set()
-        for object in graph[node]:
+        for object in graph[node]:      #check each edge
             if object[1] < old:
-                old_edges.add(object)
+                old_edges.add(object)   #if edge is too old, add to list to be removed
         for object in old_edges:
-            graph[node].discard(object)
-        if len(graph[node]) == 0:
-             old_nodes.append(node)
+            graph[node].discard(object) #remove old edges
+        if len(graph[node]) == 0:       
+             old_nodes.append(node)     #if node is isolated, add to list to be removed
     for object in old_nodes:
-        del graph[object]
+        del graph[object]               #remove isolated edges
 
 """
 A funtion that calculates the average degree of a graph by
@@ -118,9 +122,9 @@ def avg_degree(gr):
     if len(gr) == 0:
         return 0.00
     edges = 0.
-    for node in gr:
-        edges += len(gr[node])
-    avg_degree = edges / len(gr) 
+    for node in gr:                     #go over the whole graph
+        edges += len(gr[node])          #add up all the edges
+    avg_degree = edges / len(gr)        #divide by number of nodes
     return avg_degree
 
 """
@@ -134,10 +138,11 @@ the artifacts from the API that fetched it, un comment
 the lines.
 """
 with open(input_filename, 'r') as infile:
-    for line in infile:
-        raw_tweet = json.loads(line)
+    for line in infile:                 #go over the whole file
+        raw_tweet = json.loads(line)    #decode the JSON
         if 'limit' in raw_tweet:
             continue
+                                        #save the parts of the JSON we want
         tweet_text.append(raw_tweet['text'])
         tweet_time.append(raw_tweet['created_at'].encode('ascii','ignore'))
         hashtags.append(raw_tweet['entities']['hashtags'])
@@ -149,26 +154,38 @@ timestamp to the ft1.txt output file. At the end of the
 file the number of non-ascii tweets is written.       
 """ 
 with open(cleaned_tweets, 'w') as outfile:
-    for i in range(len(tweet_text)):
-        if not is_ascii(tweet_text[i]):
+    for i in range(len(tweet_text)):    #go over every tweet
+        if not is_ascii(tweet_text[i]): #increment if the tweet is non-ascii
             unicode_tweets += 1
+                                        #clean the tweets up    
         outfile.write(tweet_text[i].encode('ascii','ignore').replace("\n"," ").replace("\t"," ") + ' (' + tweet_time[i] + ')\n')
     outfile.write('\n' + str(unicode_tweets) + ' tweets contained unicode.')
         
 
+"""
+The with statement below goes tweet by tweet adding tweets
+that have more than one hashtag to the graph after cleaning
+up the hashtag text. Regardless of if a tweet contained more
+than one hashtag, every tweet's timestamp is fed to the
+removal fuction to prune tweets older than one minute back
+from 'now'. The the average degree of the graph is calculated,
+and that is written to the output file. 
+"""
 with open(average_degree, 'w') as outfile:
-    for i in range(len(hashtags)):
+    for i in range(len(hashtags)):      #go tweet by tweet
         avg_deg = 0.
         tags = []
+                                        #make the timestamp a datetime object
         time = datetime.datetime.strptime(tweet_time[i], '%a %b %d %H:%M:%S +0000 %Y')
-        if len(hashtags[i]) > 1:        #only create nodes for tweets with 2 or more hashtags
-
-            for j in range(len(hashtags[i])):
-                tags.append(hashtags[i][j]['text'].encode('ascii','ignore').lower())
-            
-            insert_node(tags, time)
-            
-        remove_node(time)
+               
+        for j in range(len(hashtags[i])):
+            tags.append(hashtags[i][j]['text'].encode('ascii','ignore').strip().lower())
+        
+        tags = [x for x in tags if x != ''] #remove empty hashtags        
+        
+        if len(tags) > 1:               #only use tweets that contain more than one nonblank tag
+            insert_node(tags, time)     #add nodes and edges with current time
+        remove_node(time)               #give the removal function current time to delete old edges/nodes
         avg_deg = avg_degree(graph)
         outfile.write('{0:.2f}\n'.format(avg_deg))
 
