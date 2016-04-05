@@ -1,5 +1,5 @@
 # CodingChallenge
-Insight Data Engineering 2015 Coding Challenge
+Insight Data Engineering Coding Challenge
 
 This is a simple, single python 2.7 program approach to the coding challenge. Since this was a simple, one off project, I chose to hardcode the filepaths of the input and output, so the file structure was clearly described in the challenge. This means that run.sh only runs the python script, and doesn't pass it anything. I chose to solve this problem as it was presented, as opposed to how it might actually be impletmented in the real-world, with getting a data stream from an API. Because we were provided a text file with all of the tweets in it, it made more sense to do most of the preprocessing all at once, rather than go line by line. Most of the processing of the JSON tweets was fairly simple, as python has built in libraries to handle JSON and datetime stamps. Also, encoding the strings as ascii removed the majority of the escape characters. The only dependencies this program has are the libraries json and datetime, which to my knowledge come with every python distribution.
 
